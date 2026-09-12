@@ -1,6 +1,8 @@
 package assembly.general.api.exception;
 
+import assembly.general.api.dto.BookUnavailableErrorResponse;
 import assembly.general.api.dto.ErrorResponse;
+import assembly.general.api.dto.ReservationLimitErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -30,6 +32,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBookNotFound(BookNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ReservationLimitExceededException.class)
+    public ResponseEntity<ReservationLimitErrorResponse> handleLimitExceeded(ReservationLimitExceededException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ReservationLimitErrorResponse(ex.getMessage(), ex.getCurrentReservations()));
+    }
+
+    @ExceptionHandler(BookUnavailableException.class)
+    public ResponseEntity<BookUnavailableErrorResponse> handleBookUnavailable(BookUnavailableException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new BookUnavailableErrorResponse(ex.getMessage(), ex.getAvailableCopies()));
     }
 
     // triggered automatically when @Valid fails on a @RequestBody
