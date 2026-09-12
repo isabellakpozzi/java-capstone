@@ -1,4 +1,4 @@
-package assembly.general.api.controller;
+package assembly.general.api.controllers;
 
 import assembly.general.api.dto.AuthResponse;
 import assembly.general.api.dto.LoginRequest;

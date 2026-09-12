@@ -26,6 +26,12 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of("AUTHENTICATION_FAILED", ex.getMessage()));
     }
 
+    @ExceptionHandler(BookNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBookNotFound(BookNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
+    }
+
     // triggered automatically when @Valid fails on a @RequestBody
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
