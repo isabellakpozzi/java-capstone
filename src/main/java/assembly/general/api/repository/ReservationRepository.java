@@ -19,4 +19,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
 
     // full borrowing history sorted most-recent-first via Pageable
     Page<Reservation> findByUser(User user, Pageable pageable);
+
+    // "borrowingHistory" count shown on GET /api/users/profil
+    long countByUser(User user);
 }
