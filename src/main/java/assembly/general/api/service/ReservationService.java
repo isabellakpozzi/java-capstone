@@ -9,6 +9,10 @@ import assembly.general.api.exception.*;
 import assembly.general.api.repository.BookRepository;
 import assembly.general.api.repository.ReservationRepository;
 import assembly.general.api.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -170,5 +174,22 @@ public class ReservationService {
                 : "Book returned successfully";
 
         return new ReturnResponse(saved.getId(), saved.getReturnedAt(), lateDays, lateFee, message);
+    }
+
+    public PagedResponse<BorrowingHistoryItem> getHistory(UUID userId, int page, int size) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("Authenticated user not found: " + userId));
+
+        // Most-recent-first: returnedAt covers RETURNED items, reservedAt covers
+        // everything else (RESERVED/CHECKED_OUT/CANCELLED have no returnedAt yet).
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "reservedAt"));
+
+        Page<Reservation> result = reservationRepository.findByUser(user, pageable);
+
+        List<BorrowingHistoryItem> content = result.getContent().stream()
+                .map(BorrowingHistoryItem::new)
+                .toList();
+
+        return new PagedResponse<>(content, result);
     }
 }

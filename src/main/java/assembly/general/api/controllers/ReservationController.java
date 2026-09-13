@@ -1,12 +1,6 @@
 package assembly.general.api.controllers;
 
-import assembly.general.api.dto.ActiveReservationsResponse;
-import assembly.general.api.dto.ReservationRequest;
-import assembly.general.api.dto.CheckoutRequest;
-import assembly.general.api.dto.CheckoutResponse;
-import assembly.general.api.dto.ReturnRequest;
-import assembly.general.api.dto.ReturnResponse;
-import assembly.general.api.dto.ReservationResponse;
+import assembly.general.api.dto.*;
 import assembly.general.api.service.ReservationService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -54,5 +48,14 @@ public class ReservationController {
             @Valid @RequestBody ReturnRequest request
     ) {
         return reservationService.returnBook(reservationId, request);
+    }
+
+    @GetMapping("/history")
+    public PagedResponse<BorrowingHistoryItem> getHistory(
+            @AuthenticationPrincipal UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        return reservationService.getHistory(userId, page, size);
     }
 }
