@@ -2,6 +2,10 @@ package assembly.general.api.controllers;
 
 import assembly.general.api.dto.ActiveReservationsResponse;
 import assembly.general.api.dto.ReservationRequest;
+import assembly.general.api.dto.CheckoutRequest;
+import assembly.general.api.dto.CheckoutResponse;
+import assembly.general.api.dto.ReturnRequest;
+import assembly.general.api.dto.ReturnResponse;
 import assembly.general.api.dto.ReservationResponse;
 import assembly.general.api.service.ReservationService;
 import jakarta.validation.Valid;
@@ -34,5 +38,21 @@ public class ReservationController {
     @GetMapping
     public ActiveReservationsResponse getActiveReservations(@AuthenticationPrincipal UUID userId) {
         return reservationService.getActiveReservations(userId);
+    }
+
+    @PostMapping("/{reservationId}/checkout")
+    public CheckoutResponse checkout(
+            @PathVariable UUID reservationId,
+            @RequestBody(required = false) CheckoutRequest request
+    ) {
+        return reservationService.checkout(reservationId, request != null ? request : new CheckoutRequest());
+    }
+
+    @PostMapping("/{reservationId}/return")
+    public ReturnResponse returnBook(
+            @PathVariable UUID reservationId,
+            @Valid @RequestBody ReturnRequest request
+    ) {
+        return reservationService.returnBook(reservationId, request);
     }
 }

@@ -2,6 +2,7 @@ package assembly.general.api.exception;
 
 import assembly.general.api.dto.BookUnavailableErrorResponse;
 import assembly.general.api.dto.ErrorResponse;
+import assembly.general.api.dto.InvalidStatusErrorResponse;
 import assembly.general.api.dto.ReservationLimitErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +45,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<BookUnavailableErrorResponse> handleBookUnavailable(BookUnavailableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new BookUnavailableErrorResponse(ex.getMessage(), ex.getAvailableCopies()));
+    }
+
+    @ExceptionHandler(ReservationNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleReservationNotFound(ReservationNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.of("NOT_FOUND", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidReservationStatusException.class)
+    public ResponseEntity<InvalidStatusErrorResponse> handleInvalidStatus(InvalidReservationStatusException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new InvalidStatusErrorResponse(ex.getMessage(), ex.getCurrentStatus()));
     }
 
     // triggered automatically when @Valid fails on a @RequestBody

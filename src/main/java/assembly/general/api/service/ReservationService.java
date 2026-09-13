@@ -1,16 +1,11 @@
 package assembly.general.api.service;
 
-import assembly.general.api.dto.ActiveReservationItem;
-import assembly.general.api.dto.ActiveReservationsResponse;
-import assembly.general.api.dto.ReservationRequest;
-import assembly.general.api.dto.ReservationResponse;
+import assembly.general.api.dto.*;
 import assembly.general.api.entity.Book;
 import assembly.general.api.entity.Reservation;
 import assembly.general.api.entity.ReservationStatus;
 import assembly.general.api.entity.User;
-import assembly.general.api.exception.BookNotFoundException;
-import assembly.general.api.exception.BookUnavailableException;
-import assembly.general.api.exception.ReservationLimitExceededException;
+import assembly.general.api.exception.*;
 import assembly.general.api.repository.BookRepository;
 import assembly.general.api.repository.ReservationRepository;
 import assembly.general.api.repository.UserRepository;
@@ -18,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 
@@ -100,5 +97,78 @@ public class ReservationService {
                 .toList();
 
         return new ActiveReservationsResponse(items, items.size());
+    }
+
+    @Transactional
+    public CheckoutResponse checkout(UUID reservationId, CheckoutRequest request) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException(
+                        "Reservation not found with ID: " + reservationId));
+
+        if (reservation.getStatus() != ReservationStatus.RESERVED) {
+            throw new InvalidReservationStatusException(
+                    "Can only checkout reservations with RESERVED status", reservation.getStatus());
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime dueDate = now.plusDays(14);
+
+        reservation.setStatus(ReservationStatus.CHECKED_OUT);
+        reservation.setCheckedOutAt(now);
+        reservation.setDueDate(dueDate);
+        reservation.setNotes(request.getNotes());
+
+        Reservation saved = reservationRepository.save(reservation);
+
+        String formattedDate = dueDate.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"));
+
+        return new CheckoutResponse(
+                saved.getId(),
+                saved.getStatus(),
+                saved.getCheckedOutAt(),
+                saved.getDueDate(),
+                "Book checked out successfully. Due date: " + formattedDate
+        );
+    }
+
+    @Transactional
+    public ReturnResponse returnBook(UUID reservationId, ReturnRequest request) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException(
+                        "Reservation not found with ID: " + reservationId));
+
+        if (reservation.getStatus() != ReservationStatus.CHECKED_OUT) {
+            throw new InvalidReservationStatusException(
+                    "Can only return reservations with CHECKED_OUT status", reservation.getStatus());
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        long lateDays = 0;
+        if (now.isAfter(reservation.getDueDate())) {
+            lateDays = ChronoUnit.DAYS.between(reservation.getDueDate(), now);
+            if (lateDays < 1) {
+                lateDays = 1; // any overdue amount under 24h still counts as 1 late day
+            }
+        }
+        double lateFee = lateDays * 1.00;
+
+        reservation.setStatus(ReservationStatus.RETURNED);
+        reservation.setReturnedAt(now);
+        reservation.setConditionAtReturn(request.getCondition());
+        reservation.setNotes(request.getNotes());
+        reservation.setLateDays((int) lateDays);
+        reservation.setLateFee(lateFee);
+
+        Book book = reservation.getBook();
+        book.setAvailableCopies(book.getAvailableCopies() + 1);
+        bookRepository.save(book);
+
+        Reservation saved = reservationRepository.save(reservation);
+
+        String message = lateDays > 0
+                ? String.format("Book returned. Late fee of $%.2f applied to account.", lateFee)
+                : "Book returned successfully";
+
+        return new ReturnResponse(saved.getId(), saved.getReturnedAt(), lateDays, lateFee, message);
     }
 }
