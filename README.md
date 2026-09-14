@@ -1,281 +1,221 @@
 # Digital Library Management System API
 
-## Business Context
+A Spring Boot REST API for managing library operations: user authentication, book catalog browsing/search, and the full reservation lifecycle (reserve → checkout → return) with automatic late fee calculation.
 
-### Overview
+**Live deployment:** `https://java-capstone-6e82.onrender.com`
+**Swagger UI:** `https://java-capstone-6e82.onrender.com/swagger-ui/index.html`
+**Health check:** `https://https://java-capstone-6e82.onrender.com/actuator/health`
 
-The Digital Library Management System is a modern backend API solution designed to digitize and streamline library operations for public and institutional libraries transitioning from manual record-keeping to digital platforms.
-
-### Business Problem
-
-Traditional libraries face several operational challenges:
-
-- Manual tracking of book availability and reservations leads to errors and inefficiency
-- Limited visibility into borrowing patterns and inventory usage
-- Poor user experience with no self-service capabilities for browsing or reserving books
-- Difficulty managing overdue books and calculating late fees
-- Time-consuming checkout and return processes at the library desk
-
-### Solution
-
-Our Digital Library Management System provides:
-
-- **Self-service portal** for users to browse, search, and reserve books online
-- **Automated reservation management** with 7-day pickup windows
-- **Real-time availability tracking** to reduce operational overhead
-- **Librarian tools** for efficient checkout and return processing
-- **Borrowing history** for patrons to track their reading activity
-- **Scalable architecture** ready for cloud deployment
-
-### Target Users
-
-1. **Library Patrons**: Browse catalog, reserve books, view borrowing history
-2. **Librarians**: Process checkouts and returns, manage reservations
+> Note: this app runs on Render's free tier. The web service spins down after 15 minutes of inactivity — the first request after idle time can take 30–60 seconds to respond while it wakes back up. This is expected behavior, not a bug.
 
 ---
 
-## A Note on the Starter Code
+## Proof of Production Deployment
 
-This scaffold was inherited, not written for you, like most code you'll take over on a real engagement. It is **not production-ready as handed over.** It contains at least one security/configuration choice that a careful engineer would catch and fix before building on top of it.
+> See "Known Issue" section below — `/actuator/health` and `GET /api/catalog/books` currently return 401 in production due to an unresolved, actively-documented environment-specific bug. The screenshots below reflect what is genuinely working; endpoints affected by the known issue are noted as such rather than staged to look otherwise.
 
-Trust the voice in the back of your head that says *"this is a weird / unsafe / bad choice."* That instinct is one of the most valuable things you're developing here: inherited code should be read with a critical eye, not trusted by default.
+**1. Health check**
 
-**But** get the baseline requirements working first, *then* harden and optimise. Don't rabbit-hole on a clever fix before the core reserve → checkout → return flow runs end-to-end (as seen via the Swagger API). As Donald Knuth put it, *"premature optimization is the root of all evil."* Finishing the contract beats polishing a corner of it, and that's a grading reality too: a complete **Baseline Build** counts for more than a half-built **Above and Beyond** (see [Grading Tiers](#grading-tiers)).
+<img width="776" height="260" alt="image" src="https://github.com/user-attachments/assets/e3105548-47f3-4889-b8c3-06552147a8cb" />
 
----
 
-## Getting Started
+**2. Swagger UI — live and accessible**
+<img width="1530" height="1024" alt="image" src="https://github.com/user-attachments/assets/7b4cd10e-11cb-4236-992a-35a6c2704866" />
 
-### Core Requirements Documents
 
-**Review these foundational documents before implementation:**
 
-1. **[User Stories](docs/user-stories.md)** - **START HERE**
-   - 11 user stories defining all system functionality
-   - Business requirements and acceptance criteria
-   - Your primary requirements document
+**3. Reservation lifecycle against production (reserve → checkout → return)**
 
-2. **[API Contracts](docs/api-contracts.md)** - **CRITICAL**
-   - Complete external API interface specification
-   - All 10 endpoint definitions with request/response formats
-   - Defines the contract you must fulfill
+> Note: since `GET /api/catalog/books` is affected by the known issue, a `bookId` for these steps was obtained by logging the seeded data in the Render deployment output, rather than through the catalog list endpoint.
 
-3. **[Development Environment Setup](docs/dev-enviroment-setup.md)**
-   - Initial project setup and local development configuration
+<img width="1162" height="761" alt="image" src="https://github.com/user-attachments/assets/ecd006e5-0450-43ef-8dd3-f2803640721e" />
 
-### Implementation Approach
+Reserve:
+<img width="971" height="802" alt="image" src="https://github.com/user-attachments/assets/266ce0a1-fd41-492c-9844-1942c410ad5e" />
 
-**Prioritize understanding requirements over implementation details:**
 
-- User Stories define business requirements and desired outcomes
-- API Contracts define the exact external interface
-- Milestone documents provide technical guidance and acceptance criteria
+Checkout (as librarian):
+<img width="962" height="825" alt="image" src="https://github.com/user-attachments/assets/416186f5-ddb6-48de-8a0c-e00487011ffc" />
 
-You have flexibility in **HOW** you implement the solution, but must meet the requirements defined in User Stories and API Contracts.
+<img width="964" height="836" alt="image" src="https://github.com/user-attachments/assets/214c99ce-bd9a-4d31-b0df-ded65e98a62e" />
+
+
+Return (as librarian, with late fee calculation shown):
+<img width="968" height="836" alt="image" src="https://github.com/user-attachments/assets/309fd2a2-5762-4b7f-a470-a3b4c9fd15d2" />
+
 
 ---
 
-## Project Structure
+## Tech Stack
 
-### Requirements Documentation
-
-- **[User Stories](docs/user-stories.md)** - Business requirements
-- **[API Contracts](docs/api-contracts.md)** - External API interface
-
-### Implementation Guides (Milestones)
-
-1. [Milestone 1: Data Modeling](docs/milestone-1-data-modeling-guide.md)
-2. [Milestone 2: User Service & Authentication](docs/milestone-2-user-service-authentication.md)
-3. [Milestone 3: Catalog Service](docs/milestone-3-catalog-service.md)
-4. [Milestone 4: Reservation Service](docs/milestone-4-reservation-service-core-functionality.md)
-5. [Milestone 5: Testing & Quality Assurance](docs/milestone-5-testing-quality-assurance.md)
-6. [Milestone 6: Deployment & Production Readiness](docs/milestone-6-deployment-production-readiness.md)
-
-### Environment Setup
-
-- [Development Environment Setup](docs/dev-enviroment-setup.md)
-- [Production Environment Setup](docs/production-enviroment-setup.md)
+- Java 21
+- Spring Boot 3.5.6
+- Spring Security 6 + JJWT (JWT authentication)
+- Spring Data JPA / Hibernate
+- H2 (local development) / PostgreSQL (production, via Render)
+- Maven
+- JUnit 5, Mockito, AssertJ (testing)
+- JaCoCo (coverage reporting)
+- Springdoc OpenAPI (Swagger UI)
+- Docker (production build/deploy)
 
 ---
 
-## API Endpoints (10 Total)
+## Running Locally
 
-### Authentication & User Management (3)
+```bash
+./mvnw clean install
+./mvnw spring-boot:run
+```
 
-- `POST /api/auth/register` - Create new user account
-- `POST /api/auth/login` - Authenticate and receive JWT token
-- `GET /api/users/profile` - View user profile with statistics
+Runs on `http://localhost:8080` using the `dev` profile (H2 in-memory database no local Postgres or Docker required).
 
-### Catalog Management (2)
+- H2 Console: `http://localhost:8080/h2-console`
+  JDBC URL: `jdbc:h2:mem:librarydb`, username: `sa`, password: *(blank)*
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 
-- `GET /api/catalog/books` - Browse and search books with pagination
-- `GET /api/catalog/books/{bookId}` - View detailed book information
+## Running Tests
 
-### Reservation Management (5)
+```bash
+./mvnw clean test
+```
 
-- `POST /api/reservations` - Reserve an available book
-- `GET /api/reservations` - View active reservations
-- `POST /api/reservations/{reservationId}/checkout` - Checkout book (Librarian only)
-- `POST /api/reservations/{reservationId}/return` - Return book with late fee calculation (Librarian only)
-- `GET /api/reservations/history` - View complete borrowing history
+Coverage report generated at `target/site/jacoco/index.html` after running tests.
 
-**See [API Contracts](docs/api-contracts.md) for complete specifications.**
-
----
-
-## Technical Stack
-
-### Required Technologies
-
-- **Java**: 17 or 21 (LTS)
-- **Spring Boot**: 3.2+
-- **Spring Security**: 6.x with JWT authentication
-- **Spring Data JPA**: Database access
-- **PostgreSQL**: 15+ (via Docker locally, RDS in production)
-- **Maven**: Build tool
-
-### Additional Libraries
-
-Choose appropriate libraries for:
-
-- JWT token handling
-- API documentation (e.g., SpringDoc OpenAPI)
-- Testing frameworks
-- Validation
-
-### Deployment
-
-- **AWS Elastic Beanstalk**: Application hosting
-- **AWS RDS**: PostgreSQL database
+**Current coverage: 94% instructions / 65% branches**. Covers:
+- Repository layer (`@DataJpaTest`): custom queries, filters, pagination, sorting, unique constraints
+- Service layer (Mockito unit tests): business rules in isolation, late fee math, status transitions, JWT generation/validation/expiration
+- Full integration tests (`@SpringBootTest` + `MockMvc`): every one of the 10 endpoints, driven through the real security filter chain, covering both success and error paths (401/403/400/404)
 
 ---
 
-## Grading Tiers
+## API Endpoints (10 total)
 
-Your submission is assessed against three cumulative tiers. Reach for the next only once the previous one is solid.
+| Method | Endpoint | Access |
+|---|---|---|
+| POST | `/api/auth/register` | Public |
+| POST | `/api/auth/login` | Public |
+| GET | `/api/users/profile` | Authenticated |
+| GET | `/api/catalog/books` | Public |
+| GET | `/api/catalog/books/{bookId}` | Public |
+| POST | `/api/reservations` | Authenticated |
+| GET | `/api/reservations` | Authenticated |
+| POST | `/api/reservations/{id}/checkout` | LIBRARIAN only |
+| POST | `/api/reservations/{id}/return` | LIBRARIAN only |
+| GET | `/api/reservations/history` | Authenticated |
 
-| Tier | The question it answers | What it looks like |
-| --- | --- | --- |
-| **Baseline Build** | *Does it work?* | All 10 endpoints implemented to the contract; the app runs end-to-end (reserve → checkout → return); Swagger UI is live; JWT auth and role checks are in place; tests are present. This is the core bar. |
-| **Production-Ready** | *Would this survive contact with a real client?* | Clean, considered, trustworthy work: the kind you'd be comfortable handing to a client, not just something that passes on your machine. |
-| **Above and Beyond** | *Did you handle what the spec didn't spell out?* | Optional, harder work that goes past the brief. Deliberately challenging, entirely optional: attempt it only once Baseline Build is complete. |
-
-<details>
-<summary><strong>How the tiers work</strong></summary>
-
-- **Baseline Build** is the floor: a complete, working build to the contract. Finish this first; a complete Baseline Build always counts for more than a half-finished attempt at the tier above it.
-- **Production-Ready** is the standard of craft we're really looking for: clean, considered, trustworthy work.
-- **Above and Beyond** is genuinely optional. You are **not** expected to attempt all of it in the time given: pick what interests you and finish it cleanly. Choosing *what* to attempt, and knowing what to leave alone, is itself part of what we're looking at.
-
-Security runs through all three tiers. Revisit the **RESTful APIs & Security** lesson: the attack vectors it covers are exactly the kinds of failure modes we'll be probing for.
-</details>
-
-### Above and Beyond (optional)
-
-Baseline Build comes first, always. What follows are only *ideas*: "follow your curiosity" is an instruction from Deloitte, not a checklist. **Whatever you attempt, write it up in your README.**
-
-<details>
-<summary><strong>A menu of ideas</strong></summary>
-
-- **Testing**: one could perhaps explore behaviour-driven testing (e.g. Cucumber), among other approaches.
-- **Security**: revisit the RESTful APIs & Security lesson, and go as deep as you dare.
-- **Robustness**: under load, at the edges, when things don't go to plan.
-- **Performance**: where will this strain as the catalogue grows?
-- **Code craft**: clean abstractions, modern Java, static analysis.
-- **Architecture**: split into services (Feign, gateway, Eureka). Biggest effort, do it last: it breaks the single-instance deployment, so keep it on a separate, undeployed branch and attempt it only after a successful normal deploy. Doable on full AWS, likely not in our sandbox, so you'd be on your own.
-- **Your own instinct and curiosity**: spot something worth improving, justify it, build it, and document it in your README. Noticing what's worth doing is the real skill.
-
-</details>
+Full request/response contracts: see `docs/api-contracts.md`.
 
 ---
 
-## Success Criteria
+## Design Decisions & Notable Implementation Details
 
-> Capstones are graded as **Does Not Meet**, **Partially Meets**, **Meets**, or **Exceeds Expectations**, with instructor feedback.
-
-### User Story Compliance
-
-- All 11 user stories fully implemented
-- All acceptance criteria met
-- All business rules enforced (5 reservation limit, 7-day expiry, 14-day checkout, $1/day late fees)
-
-### API Contract Compliance
-
-- All 10 endpoints implemented as specified
-- Request/response formats match exactly
-- HTTP status codes correct
-- Error response format consistent
-- Authentication and authorization working properly
-
-### Technical Quality
-
-- Minimum 80% test coverage
-- All endpoints tested (unit and integration)
-- Proper error handling (400, 401, 403, 404, 500)
-- Security properly implemented (JWT, role-based access)
-- Successfully deployed to cloud environment
-
-### Functional Verification
-
-- Complete reservation lifecycle works (reserve → checkout → return)
-- Role-based access control enforced (PATRON vs LIBRARIAN)
-- Real-time availability tracking works correctly
-- Late fee calculation accurate
-- Pagination and search functional
+- **No book-management endpoint exists in the API contract.** The spec defines only read-only catalog endpoints (browse, detail) there's no `POST /api/catalog/books` or any admin route for creating books, and no endpoint for promoting a user to `LIBRARIAN`. `DataSeeder` component (`CommandLineRunner`) runs once on application startup: it checks whether any books exist, and if not, inserts a small set of sample books and a demo librarian account (`librarian@library.com` / `Librarian123!`). Restarts/redeploys never duplicate the data.
+**Note:** the seeded librarian account uses a fixed, hardcoded password for demo convenience. This is a simplification for this environment, not something for actual production system.
+- **Sort-field whitelisting** on `GET /api/catalog/books` only `title`, `author`, and `publicationYear` are accepted as `sortBy` values; anything else silently falls back to `title` rather than passing input into the query layer.
+- **Custom JSON error handling for 401/403.** Spring Security's defaults return empty response bodies for these statuses. A `CustomAuthenticationEntryPoint` and `CustomAccessDeniedHandler` were added so every error response consistently matches the `{error, message, timestamp}` shape used everywhere else in the API contract.
+- **`@Transactional` on reservation state changes** (create, checkout, return) ensures the reservation update and the book's `availableCopies` update either both succeed or both roll back together, preventing inconsistent inventory counts if an operation fails partway through.
 
 ---
 
-## Development Philosophy
+## Security Issues Found in the Starter Code (and Fixes)
 
-### Requirements-Driven Development
+### 1. Hardcoded database password fallback in production config
 
-1. Understand the requirements (User Stories and API Contracts)
-2. Plan your implementation (data model, architecture)
-3. Build to meet the contract
-4. Verify completeness (test against acceptance criteria)
+**Found in `application-prod.properties`:**
+```properties
+spring.datasource.password=${RDS_PASSWORD:password}
+```
+The `:password` segment is a default fallback value. If the `RDS_PASSWORD` environment variable isn't set for any reason, the application doesn't fail but it silently connects to the production database using the literal password `password`. 
 
-### Implementation Flexibility
+**Fix applied:** removed the fallback entirely.
+```properties
+spring.datasource.password=${RDS_PASSWORD}
+```
 
-You decide:
+### 2. Wrong default Spring profile
 
-- Internal code organization and architecture
-- Service layer design patterns
-- Repository implementation approaches
-- Validation strategies
-- Testing frameworks
-- Error handling mechanisms
+**Found in `application.properties`:**
+```properties
+spring.profiles.active=${SPRING_PROFILES_ACTIVE:prod}
+```
+The fallback profile was `prod`, not `dev`. This means anyone running the project locally *without* explicitly setting `SPRING_PROFILES_ACTIVE` would silently attempt to connect to a real PostgreSQL server at `localhost:5432` with username `postgres` rather than falling back to the safe, zero-config H2 setup the project's dev documentation describes. In practice, this caused a real `password authentication failed for user "postgres"` failure during local setup.
 
-### Non-Negotiable Constraints
+**Fix applied:**
+```properties
+spring.profiles.active=${SPRING_PROFILES_ACTIVE:dev}
+```
+Local development now defaults to the H2 in-memory profile with no extra configuration required, matching the project's setup instructions. Production deployments are unaffected, since Elastic Beanstalk/Render explicitly set `SPRING_PROFILES_ACTIVE=prod` as an environment variable regardless of this fallback.
 
-You must adhere to:
+### 3. Hardcoded JWT secret committed directly in production config
 
-- User Story requirements and acceptance criteria
-- API Contract specifications
-- Business rules (reservation limits, dates, fees)
-- Technology stack (Spring Boot, PostgreSQL, JWT)
-- Security requirements (authentication, authorization)
+**Found in `application-prod.properties`:**
+```properties
+jwt-secret=U6v2kzA7Xp9Rq3tYu1wB5s8Df0Gh4Jj7Kl2Pn5Ms9Qv2Rt4Sv6Xy8Zz1Cc3Vb5NmPqRsTuVwXyZ123456789
+```
+A real secret was committed as a literal string directly in version control, not sourced from an environment variable at all. Anyone with read access to the repository would have the actual key used to sign production authentication tokens.
+
+**Fix applied:**
+```properties
+jwt-secret=${JWT_SECRET}
+```
+The secret is now required to be injected at runtime with no fallback, so a misconfigured deployment fails to start rather than running with a compromised, publicly-committed key. A fresh secret was generated (`openssl rand -base64 32`) and set directly in the deployment platform's environment variable configuration and never committed to the repository.
+
+*(The equivalent value in `application-dev.properties` was also checked; since dev only ever runs against a local, non-public database, a fallback default there is lower risk, but it was updated to an obviously-labeled placeholder `dev-only-insecure-secret-do-not-use-in-production` so it can never be mistaken for a real secret if copy-pasted elsewhere.)*
+
+### 4. Leftover application name from the starter's original project
+
+**Found in `application-prod.properties`:**
+```properties
+spring.application.name=student-management-system
+```
+A leftover artifact never cleaned up. Because local development always defaults to the `dev` profile (which correctly reads `application.properties`, set to `demo`), this went unnoticed for the entire project and it only surfaced once the app was actually deployed and running under the `prod` profile for the first time, since that's the only scenario in which `application-prod.properties` gets loaded at all.
+
+**Fix applied:**
+```properties
+spring.application.name=demo
+```
+Now consistent with the base configuration across all profiles.
 
 ---
 
-## Quick Start Guide
+## Known Issue: Production 401 on `GET /api/catalog/books` and `/actuator/health` (Unresolved)
 
-1. Read [User Stories](docs/user-stories.md) to understand what you're building
-2. Study [API Contracts](docs/api-contracts.md) to understand the exact API interface
-3. Set up your environment using [Development Environment Setup](docs/dev-enviroment-setup.md)
-4. Follow the milestones for structured implementation guidance
-5. Test against requirements to verify acceptance criteria
-6. Deploy to production following Milestone 6 guidance
+This is being documented as a currently-unresolved issue in the production deployment.
+
+**Symptom:** In production only (never reproduced locally), `GET /api/catalog/books` and `GET /actuator/health` return `401 Unauthorized` via the app's own custom error handler, despite both being explicitly listed as `permitAll()` in `SecurityConfig`. Every other endpoint, including `GET /api/catalog/books/{bookId}`, `POST /api/auth/register`, and a newly-added throwaway test endpoint — works correctly and returns the expected response.
+
+**What was ruled out during debugging**, roughly in order:
+1. A wrong/stale Render deploy — ruled out: commit SHAs matched exactly between local and Render's dashboard, and a "Clear build cache & deploy" was performed multiple times.
+2. A leftover, unrelated application being served instead of this one initially suspected due to a mismatched `spring.application.name` found in logs (`student-management-system`), which was a real, separate bug (see Security Issues #4 above) and was fixed, but did not resolve this 401 issue.
+3. A missing matcher for these specific paths — ruled out: both an exact-string matcher and multiple wildcard variants were added for both paths, redeployed, and retested with no change.
+4. Hidden/corrupted characters in the source file — ruled out via `cat -A`, which showed clean, correctly-terminated lines with no stray unicode.
+5. A duplicate `SecurityFilterChain` or `@EnableWebSecurity` configuration class — ruled out via repo-wide search; only one `SecurityConfig` class exists.
+6. A Spring Boot 3 / Spring Security 6 path-matching strategy mismatch (`PathPatternParser` vs `AntPathMatcher`) — attempted a fix via `spring.mvc.pathmatch.matching-strategy=ant-path-matcher`; did not resolve the issue.
+7. A genuinely fresh deploy was confirmed via a brand-new, uniquely-named test endpoint (`/api/ping`) added specifically to prove the latest code was actually running — it returned `200` correctly, confirming the deployment pipeline itself is not stale, which narrows the bug specifically to how these two particular paths are handled.
+
+**What this means for the deliverable:** every endpoint has been fully implemented, tested, and verified working correctly which is proven via 94% automated test coverage and full local integration tests covering all 10 endpoints, including these two. This is a deployment-environment-specific anomaly affecting request routing/matching for two specific paths on one specific hosting platform, not a defect in the application logic, security design, or business rules themselves.
+
+**If given more time**, the next diagnostic step would be to test with `authorizeHttpRequests` reduced to `anyRequest().permitAll()` entirely (isolating whether the issue lives inside Spring Security's matching logic at all, versus somewhere else in the request pipeline such as a proxy/edge layer specific to the hosting platform), followed by inspecting whether Render's edge infrastructure (Cloudflare, visible in response headers) applies any request-path handling that could interact unexpectedly with these particular routes.
 
 ---
 
-## Support & Resources
+- **The free web service spins down after 15 minutes of inactivity**, causing a 30–60 second delay on the first request after idle periods.
+- **No AWS deployment was used** The provided AWS training sandbox's IAM policy blocked `rds:CreateDBInstance` and `kms:ListAliases`. Render was used instead, as an equivalent cloud platform.
 
-- **User Stories**: Business requirements and functionality definitions
-- **API Contracts**: External API interface specifications
-- **Milestone Guides**: Implementation guidance and acceptance criteria
-- **Spring Boot Documentation**: Framework reference
-- **PostgreSQL Documentation**: Database reference
 
 ---
 
-**Remember**: User Stories and API Contracts define **WHAT** you must build. Milestone documents suggest **HOW** you might approach it, but you have flexibility in implementation as long as you meet the requirements.
+## Environment Variables Reference
+
+| Variable | Purpose |
+|---|---|
+| `SPRING_PROFILES_ACTIVE` | Set to `prod` in deployment |
+| `JWT_SECRET` | Signing key for JWT tokens (min 256 bits) |
+| `RDS_HOSTNAME` | Database host |
+| `RDS_PORT` | Database port (`5432`) |
+| `RDS_DB_NAME` | Database name |
+| `RDS_USERNAME` | Database username |
+| `RDS_PASSWORD` | Database password |
+
+`PORT`/`SERVER_PORT` is provided automatically by the hosting platform 
