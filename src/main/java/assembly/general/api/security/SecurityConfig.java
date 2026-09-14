@@ -49,10 +49,10 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/h2-console/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/actuator/**",
+                                "/api/catalog/**"
                         ).permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/catalog/**")
-                        .permitAll()
 
                         // LIBRARIAN-only endpoints
                         .requestMatchers("/api/reservations/*/checkout", "/api/reservations/*/return")
