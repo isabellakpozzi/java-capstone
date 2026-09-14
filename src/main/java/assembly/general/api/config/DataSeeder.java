@@ -3,6 +3,8 @@ package assembly.general.api.config;
 import assembly.general.api.entity.*;
 import assembly.general.api.repository.BookRepository;
 import assembly.general.api.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -10,11 +12,13 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 
 /**
- * Runs once on application startup, the mechanism used
+ * Runs once on application startup. mechanism used
  * to get demo data into the database without needing direct SQL access
  */
 @Component
 public class DataSeeder implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
@@ -30,6 +34,7 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         seedBooks();
         seedLibrarian();
+        logExistingBooks();
     }
 
     private void seedBooks() {
@@ -52,6 +57,19 @@ public class DataSeeder implements CommandLineRunner {
                 1965, "A stunning blend of adventure and mysticism",
                 "Ace Books", 688, "English", 4, 4
         ));
+    }
+
+    /**
+     * Prints every book's ID to the application log on every startup
+     * a workaround so book IDs are retrievable from Render's Logs tab
+     */
+    private void logExistingBooks() {
+        log.info("===== SEEDED BOOKS (for manual reservation testing) =====");
+        bookRepository.findAll().forEach(book ->
+                log.info("bookId={} title=\"{}\" availableCopies={}",
+                        book.getId(), book.getTitle(), book.getAvailableCopies())
+        );
+        log.info("===========================================================");
     }
 
     private Book buildBook(String isbn, String title, String author, String genre, int year,
