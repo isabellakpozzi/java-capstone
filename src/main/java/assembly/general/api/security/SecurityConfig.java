@@ -48,6 +48,7 @@ public class SecurityConfig {
                                 "/actuator",
                                 "/api/catalog/books",
                                 "/api/catalog/books/**",
+                                "/api/ping",
                                 "/api/catalog/**"
                         ).permitAll()
 

@@ -12,4 +12,9 @@ public class HelloController {
     public String sayHello() {
         return "Hello World";
     }
+
+    @GetMapping("/ping")
+    public String ping() {
+        return "PONG-FRESHNESS-CHECK-9f3a2";
+    }
 }
