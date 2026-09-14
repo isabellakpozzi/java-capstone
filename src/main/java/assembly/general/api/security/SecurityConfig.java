@@ -25,10 +25,6 @@ public class SecurityConfig {
         this.accessDeniedHandler = accessDeniedHandler;
     }
 
-    /**
-     * BCrypt hashes passwords with a built-in random salt, so the same
-     * password produces a different hash every time it's stored
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -37,13 +33,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // stateless REST API: every request proves who it is via its own JWT.
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        // public endpoints & no tokens required
                         .requestMatchers(
                                 "/api/auth/register",
                                 "/api/auth/login",
@@ -51,18 +45,18 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/actuator/**",
+                                "/actuator",
+                                "/api/catalog/books",
+                                "/api/catalog/books/**",
                                 "/api/catalog/**"
                         ).permitAll()
 
-                        // LIBRARIAN-only endpoints
                         .requestMatchers("/api/reservations/*/checkout", "/api/reservations/*/return")
                         .hasRole("LIBRARIAN")
 
-                        // everything else requires an authenticated request
                         .anyRequest().authenticated()
                 )
 
-                // needed only so the H2 console
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(authenticationEntryPoint)
